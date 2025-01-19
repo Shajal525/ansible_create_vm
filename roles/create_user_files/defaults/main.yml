@@ -1,0 +1,6 @@
+api_host: "homenas"
+domain_name: "homenas.com"
+ansible_user: "ansible"
+timezone: 'Europe/London'
+locale: 'en_GB.UTF-8'
+ansible_ip: 192.168.1.4

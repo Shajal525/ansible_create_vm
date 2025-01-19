@@ -1,0 +1,15 @@
+---
+
+# Resize the disk
+# The Cloud-Init disk is only 2GB
+- name: Resize disk
+  community.general.proxmox_disk:
+    api_host: "{{ proxmox_host }}"
+    api_user: "{{ proxmox_user }}"
+    api_password: "{{ proxmox_password }}"
+    vmid: "{{ vm_id }}"
+    name: "{{ vm_name }}"
+    disk: scsi0
+    size: "{{ vm_disk_size }}G"
+    state: 'resized'
+    timeout: 60

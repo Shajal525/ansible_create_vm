@@ -1,0 +1,25 @@
+---
+proxmox_host: "proxmox.com"
+proxmox_user: "root@pam"
+proxmox_password: "shajal"
+proxmox_node: "proxmox"
+vm_id: "{{ new_vm_id }}"
+vm_name: "DebianNAS"
+vm_cores: 4
+vm_sockets: 1
+vm_memory: 4096
+vm_bios: "ovmf"
+vm_machine: "q35"
+vm_scsihw: "virtio-scsi-single"
+vm_vga: "serial0"
+vm_bridge: "vmbr0"
+vm_vlan: 1
+vm_storage: "local-zfs"
+image_storage: local
+image_file: "{{ cloud_init_file }}"
+drive_format: qcow2
+vm_os_type: "l26"
+snippets_storage: local
+vm_ip_address: "192.168.1.3"
+vm_ip_gateway: "192.168.1.1"
+vm_disk_size: 90

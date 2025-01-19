@@ -1,0 +1,18 @@
+---
+
+# Update network settings
+# A custom file would have been preferred to update the network settings but the problem is it includes a MAC address
+# So all VMs will be configured to use DHCP by default, those that need a static IP will be updated
+- name: Update network settings
+  proxmox_kvm:
+    api_host: "{{ proxmox_host }}"
+    api_user: "{{ proxmox_user }}"
+    api_password: "{{ proxmox_password }}"
+    node: "{{ proxmox_node }}"
+    vmid: "{{ vm_id }}"
+    name: "{{ vm_name }}"
+    ipconfig:
+      ipconfig0: 'ip={{ vm_ip_address }}/24,gw={{ vm_ip_gateway }}'
+    timeout: 60
+    update: true
+    state: "present"
