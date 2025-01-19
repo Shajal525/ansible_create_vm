@@ -1,0 +1,7 @@
+---
+
+- name: Remove cloud-init file
+  become: true
+  file:
+    path: '{{ snippets_path }}{{ new_vm_id }}-user.yml'
+    state: absent

@@ -1,0 +1,11 @@
+---
+- name: Stop VMs
+  proxmox_kvm:
+    api_host: "{{ proxmox_host }}"
+    api_user: "{{ proxmox_user }}"
+    api_password: "{{ proxmox_password }}"
+    node: "{{ proxmox_node }}"
+    vmid: "{{ vm_id }}"
+    state: 'stopped'
+    timeout: 180
+
