@@ -1,5 +1,5 @@
 ---
-- name: Stop VMs
+- name: Stop VM
   proxmox_kvm:
     api_host: "{{ proxmox_host }}"
     api_user: "{{ proxmox_user }}"

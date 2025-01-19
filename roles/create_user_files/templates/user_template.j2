@@ -9,13 +9,6 @@ chpasswd:
   expire: False
 users:
   - default
-  - name: shajal
-    gecos: Shajal Sz
-    primary_group: shajal
-    groups: users
-    selinux_user: staff_u
-    lock_passwd: false
-    passwd: shajal
 package_update: true
 package_upgrade: true
 timezone: {{ timezone }}
