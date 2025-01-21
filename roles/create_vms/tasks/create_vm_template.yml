@@ -15,17 +15,16 @@
     bios: "{{ vm_bios }}"
     machine: "{{ vm_machine }}"
     scsihw: "{{ vm_scsihw }}"
-    vga: "{{ vm_vga }}"
-    net: '{"net0":"virtio,bridge={{ vm_bridge }},tag={{ vm_vlan }},firewall=1"}'
+    net: 
+      net0: "virtio,bridge={{ vm_bridge }},firewall=1"
     ipconfig:
-      ipconfig0: 'ip=dhcp'
+      ipconfig0: "ip={{ new_vm_ip_address }}/24,gw={{ vm_ip_gateway }}"
     efidisk0:
       storage: "{{ vm_storage }}"
       format: raw
       efitype: 4m
       pre_enrolled_keys: 1
     storage: "{{ vm_storage }}"
-    serial: '{"{{ vm_vga }}":"socket"}'
     scsi:
       scsi0: '{{ vm_storage }}:0,import-from={{ image_storage }}:0/{{ image_file }},format={{ drive_format }},iothread=1'
     ide:
@@ -36,14 +35,8 @@
     boot: order=scsi0
     cicustom: 'user={{ snippets_storage }}:snippets/{{ vm_id }}-user.yml'
     agent: 'enabled=1'
+    vga: "{{ vm_vga }}"
+    serial: '{"{{ vm_vga }}":"socket"}'
     timeout: 700
-    state: "present"
-
-- name: Debug VM Creation Response
-  debug:
-    var: vm_creation
-
-- name: Output VM details
-  debug:
-    msg: "VM {{ vm_name }} with ID {{ vm_id }} has been created."
+    state: present
 

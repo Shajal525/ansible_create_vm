@@ -7,5 +7,5 @@
     node: "{{ proxmox_node }}"
     vmid: "{{ vm_id }}"
     state: 'stopped'
-    timeout: 180
+    timeout: 60
 

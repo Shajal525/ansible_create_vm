@@ -1,8 +1,0 @@
----
-ssh_public_key: "/home/shajal/.ssh/id_rsa.pub"
-snippets_path: "/var/lib/vz/snippets/"
-os_image_path: '/var/lib/vz/images/0/'
-cloud_init_file: debian-12-generic-amd64.qcow2
-image_url: 'https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2'
-new_vm_id: 100
-

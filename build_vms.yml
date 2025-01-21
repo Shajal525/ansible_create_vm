@@ -1,15 +1,9 @@
 ---
-- hosts: homeserver
+- hosts: homeserver1
   become: true
   gather_facts: false
 
   roles:
     - download_cloud_init_images
     - create_user_files
-
-- hosts: homeserver
-  become: false
-  gather_facts: false
-
-  roles:
     - create_vms

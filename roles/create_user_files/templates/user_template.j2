@@ -1,8 +1,9 @@
 #cloud-config
-hostname: {{ api_host }}
+hostname: {{api_host}}
 manage_etc_hosts: true
-fqdn: {{ api_host }}{{ domain_name }}
-user: {{ ansible_user }}
+fqdn: {{api_host}}{{domain_name}}
+user: {{new_vm_username}}
+password: {{new_vm_password}}
 ssh_authorized_keys:
   - {{ lookup("file", "{{ ssh_public_key }}") }}
 chpasswd:
@@ -11,15 +12,15 @@ users:
   - default
 package_update: true
 package_upgrade: true
-timezone: {{ timezone }}
+timezone: {{timezone}}
 packages:
   - qemu-guest-agent
   - ufw
 runcmd:
   - systemctl enable qemu-guest-agent
   - systemctl start qemu-guest-agent
-  - ufw limit proto tcp from {{ ansible_ip }} to any port 22
+  - ufw limit proto tcp from {{proxmox_ip}} to any port 22
   - ufw enable
-  - locale-gen {{ locale }}
-  - localectl set-locale LANG={{ locale }}
-  - chfn -f Ansible {{ ansible_user }}
+  - locale-gen {{locale}}
+  - localectl set-locale LANG={{locale}}
+  - chfn -f Ansible {{new_vm_username}}

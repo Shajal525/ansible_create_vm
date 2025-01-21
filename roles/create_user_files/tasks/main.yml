@@ -1,10 +1,4 @@
 ---
-# Create a snippets folder
-- name: Create download folder
-  file:
-    path: '{{ snippets_path }}'
-    state: directory
-  
 # Create user cloud-init files
 # NOTE: The storage used for these files has to support snippets
 - name: Create user cloud-init files

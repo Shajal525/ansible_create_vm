@@ -1,6 +1,5 @@
+proxmox_ip: "{{ proxmox_ip_address }}"
 api_host: "homenas"
-domain_name: "homenas.com"
-ansible_user: "ansible"
+domain_name: ".com"
 timezone: 'Europe/London'
 locale: 'en_GB.UTF-8'
-ansible_ip: 192.168.1.4

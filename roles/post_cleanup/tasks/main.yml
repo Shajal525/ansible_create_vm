@@ -2,5 +2,6 @@
 
 - include_tasks: remove_could_init_files.yml
 - include_tasks: stop_vm.yml
+- include_tasks: unmount_image.yml
 - include_tasks: remove_could_init_files.yml
 - include_tasks: start_vm.yml

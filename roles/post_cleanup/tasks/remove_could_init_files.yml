@@ -5,3 +5,9 @@
   file:
     path: '{{ snippets_path }}{{ new_vm_id }}-user.yml'
     state: absent
+
+# - name: Remove image
+#   become: true
+#   file:
+#     path: '{{ os_image_path }}{{ cloud_init_file }}'
+#     state: absent

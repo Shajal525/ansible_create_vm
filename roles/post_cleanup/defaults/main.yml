@@ -1,5 +1,1 @@
-proxmox_host: "proxmox.com"
-proxmox_user: "root@pam"
-proxmox_password: "shajal"
-proxmox_node: "proxmox"
 vm_id: "{{ new_vm_id }}"
