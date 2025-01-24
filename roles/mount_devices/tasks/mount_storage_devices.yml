@@ -1,0 +1,96 @@
+---
+# - name: Run qm config to get VM configuration
+#   command: qm config 100
+#   register: vm_config_output
+
+# - name: Extract SCSI lines
+#   set_fact:
+#     scsi_lines: "{{ vm_config_output.stdout_lines | select('match', '^scsi[0-9]+:') | list }}"
+
+# - name: Extract SCSI numbers
+#   set_fact:
+#     scsi_numbers: "{{ scsi_lines | map('regex_replace', '^scsi([0-9]+):.*', '\\1') | map('int') | list }}"
+
+# - name: Find the largest SCSI number
+#   set_fact:
+#     largest_scsi: "{{ scsi_numbers | max if scsi_numbers | length > 0 else 0 }}"
+
+# - name: Add 1 to the largest SCSI number
+#   set_fact:
+#     next_scsi: "{{ (largest_scsi | int) + 1 }}"
+
+# - name: Display the next SCSI number
+#   debug:
+#     msg: "The next SCSI number is {{ next_scsi }}"
+
+
+- name: Get list of all devices in /dev/disk/by-id
+  command: ls -l /dev/disk/by-id/
+  register: disk_by_id_output
+
+- name: Parse device paths and names
+  set_fact:
+    storage_devices: "{{ disk_by_id_output.stdout_lines | select('search', '^.*->.*$') | map('regex_replace', '^.* (/dev/disk/by-id/.*) -> ../../(.*)$', '\\1 \\2') | list }}"
+
+- name: Get existing VM configuration
+  command: qm config {{ new_vm_id }}
+  register: vm_config
+  changed_when: false
+
+- name: Extract attached devices from VM config
+  set_fact:
+    attached_devices: "{{ vm_config.stdout | regex_findall('scsi[0-9]+: /dev/disk/by-id/([^,\\s]+)') }}"
+
+# - name: Filter unattached devices
+#   set_fact:
+#     unattached_devices: >-
+#       {{ 
+#         storage_devices | map('split', ' ') 
+#         | select('lambda', 'item: item[0].split("/")[-1] not in attached_devices') 
+#         | list 
+#       }}
+
+
+# - name: Show list of unattached devices for user to select
+#   debug:
+#     msg: >
+#       Available storage devices:
+#       {% for device in unattached_devices %}
+#       {{ loop.index }}: {{ device[0] }} -> {{ device[1] }}
+#       {% endfor %}
+
+- name: Debug storage_devices
+  debug:
+    msg: "{{ storage_devices }}"
+
+- name: Debug attached_devices
+  debug:
+    msg: "{{ attached_devices }}"
+
+
+
+# - name: Prompt user to select a device
+#   vars_prompt:
+#     - name: selected_device_index
+#       prompt: "Enter the number corresponding to the device you want to passthrough (1 to {{ unattached_devices | length }})"
+#       private: no
+
+# - name: Validate user selection
+#   fail:
+#     msg: "Invalid selection. Please enter a number between 1 and {{ unattached_devices | length }}."
+#   when: selected_device_index | int < 1 or selected_device_index | int > (unattached_devices | length)
+
+# - name: Get selected device
+#   set_fact:
+#     selected_device: "{{ unattached_devices[selected_device_index | int - 1] }}"
+
+# - name: Pass through selected device to the VM
+#   command: >
+#     qm set {{ vm_id }} 
+#     -scsi{{ (vm_config.stdout | regex_findall('scsi([0-9]+):') | map('int') | max(default=-1)) + 1 }} {{ selected_device[0] }}
+#   register: passthrough_output
+
+# - name: Confirm passthrough
+#   debug:
+#     msg: "Successfully passed through {{ selected_device[0] }} to VM {{ vm_id }}."
+#   when: passthrough_output is succeeded

@@ -8,3 +8,8 @@
     node: "{{ proxmox_node }}"
     vmid: "{{ vm_id }}"
     state: 'started'
+
+- name: Pause
+  pause:
+    seconds: 30
+    
