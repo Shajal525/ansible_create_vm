@@ -1,96 +1,157 @@
 ---
-# - name: Run qm config to get VM configuration
-#   command: qm config 100
-#   register: vm_config_output
+- name: Run qm config to get VM configuration
+  command: qm config "{{ vm_id }}"
+  register: vm_config_output
+  changed_when: false
 
-# - name: Extract SCSI lines
-#   set_fact:
-#     scsi_lines: "{{ vm_config_output.stdout_lines | select('match', '^scsi[0-9]+:') | list }}"
+- name: Extract SCSI lines
+  set_fact:
+    scsi_lines: "{{ vm_config_output.stdout_lines | select('match', '^scsi[0-9]+:') | list }}"
 
-# - name: Extract SCSI numbers
-#   set_fact:
-#     scsi_numbers: "{{ scsi_lines | map('regex_replace', '^scsi([0-9]+):.*', '\\1') | map('int') | list }}"
+- name: Extract SCSI numbers
+  set_fact:
+    scsi_numbers: "{{ scsi_lines | map('regex_replace', '^scsi([0-9]+):.*', '\\1') | map('int') | list }}"
 
-# - name: Find the largest SCSI number
-#   set_fact:
-#     largest_scsi: "{{ scsi_numbers | max if scsi_numbers | length > 0 else 0 }}"
+- name: Find the largest SCSI number
+  set_fact:
+    largest_scsi: "{{ scsi_numbers | max if scsi_numbers | length > 0 else 0 }}"
 
-# - name: Add 1 to the largest SCSI number
-#   set_fact:
-#     next_scsi: "{{ (largest_scsi | int) + 1 }}"
+- name: Add 1 to the largest SCSI number
+  set_fact:
+    next_scsi: "{{ (largest_scsi | int) + 1 }}"
 
-# - name: Display the next SCSI number
-#   debug:
-#     msg: "The next SCSI number is {{ next_scsi }}"
+- name: Display the next SCSI number
+  debug:
+    msg: "The next SCSI number is {{ next_scsi }}"
 
 
 - name: Get list of all devices in /dev/disk/by-id
   command: ls -l /dev/disk/by-id/
   register: disk_by_id_output
-
-- name: Parse device paths and names
-  set_fact:
-    storage_devices: "{{ disk_by_id_output.stdout_lines | select('search', '^.*->.*$') | map('regex_replace', '^.* (/dev/disk/by-id/.*) -> ../../(.*)$', '\\1 \\2') | list }}"
-
-- name: Get existing VM configuration
-  command: qm config {{ new_vm_id }}
-  register: vm_config
   changed_when: false
 
+- name: Parse device details
+  set_fact:
+    storage_devices: >-
+      {{ 
+        disk_by_id_output.stdout_lines
+        | reject('search', 'total')
+        | reject('search', 'part')
+        | map('split', ' ')
+        | list
+      }}
+
+- name: parse storage device unique ID
+  set_fact:
+    storage_devices_unique_id: "{{ storage_devices | map(attribute='9') | list }}"
+
+- name: parse storage device name
+  set_fact:
+    storage_devices_name: "{{ storage_devices | map(attribute='11') | list | map('regex_replace', '^../../', '') | list }}"
+  
 - name: Extract attached devices from VM config
   set_fact:
-    attached_devices: "{{ vm_config.stdout | regex_findall('scsi[0-9]+: /dev/disk/by-id/([^,\\s]+)') }}"
+    attached_devices: "{{ vm_config_output.stdout | regex_findall('scsi[0-9]+: /dev/disk/by-id/([^,\\s]+)') }}"
 
-# - name: Filter unattached devices
-#   set_fact:
-#     unattached_devices: >-
-#       {{ 
-#         storage_devices | map('split', ' ') 
-#         | select('lambda', 'item: item[0].split("/")[-1] not in attached_devices') 
-#         | list 
-#       }}
+- name: Filter unattached devices
+  set_fact:
+    unattached_devices_unique_id: "{{ storage_devices_unique_id | zip(storage_devices_name) | rejectattr('0', 'in', attached_devices) | map('first') | list }}"
+    unattached_devices_name: "{{ storage_devices_unique_id | zip(storage_devices_name) | rejectattr('0', 'in', attached_devices) | map('last') | list }}"
+
+- name: Get drive sizes
+  shell: |
+    lsblk -b -o NAME,SIZE --noheadings | awk '$1 == "{{ item }}" { printf "%s : %0.2fGB\n", $1, $2/1024/1024/1024 }'
+  register: drive_sizes
+  with_items: "{{ unattached_devices_name }}"
+  changed_when: false
+
+- name: Extract drive sizes into a list
+  set_fact:
+    unattached_devices_with_sizes: "{{ unattached_devices_with_sizes | default([]) + [ item.stdout ] }}"
+  with_items: "{{ drive_sizes.results }}"
+  when: item.stdout != ""
 
 
-# - name: Show list of unattached devices for user to select
-#   debug:
-#     msg: >
-#       Available storage devices:
-#       {% for device in unattached_devices %}
-#       {{ loop.index }}: {{ device[0] }} -> {{ device[1] }}
-#       {% endfor %}
 
-- name: Debug storage_devices
+- name: Debug storage_devices unique ID
   debug:
-    msg: "{{ storage_devices }}"
+    msg: "{{ storage_devices_unique_id }}"
+
+- name: Debug storage_devices_name
+  debug:
+    msg: "{{ storage_devices_name }}"
 
 - name: Debug attached_devices
   debug:
     msg: "{{ attached_devices }}"
 
+- name: Debug unattached_devices_unique_id
+  debug:
+    msg: "{{ unattached_devices_unique_id }}"
+
+- name: Debug unattached_devices_name
+  debug:
+    msg: "{{ unattached_devices_name }}"
+
+- name: Show unattached_devices_with_sizes
+  debug:
+    msg: "{{ unattached_devices_with_sizes }}"
 
 
-# - name: Prompt user to select a device
-#   vars_prompt:
-#     - name: selected_device_index
-#       prompt: "Enter the number corresponding to the device you want to passthrough (1 to {{ unattached_devices | length }})"
-#       private: no
 
-# - name: Validate user selection
-#   fail:
-#     msg: "Invalid selection. Please enter a number between 1 and {{ unattached_devices | length }}."
-#   when: selected_device_index | int < 1 or selected_device_index | int > (unattached_devices | length)
 
-# - name: Get selected device
-#   set_fact:
-#     selected_device: "{{ unattached_devices[selected_device_index | int - 1] }}"
 
-# - name: Pass through selected device to the VM
-#   command: >
-#     qm set {{ vm_id }} 
-#     -scsi{{ (vm_config.stdout | regex_findall('scsi([0-9]+):') | map('int') | max(default=-1)) + 1 }} {{ selected_device[0] }}
-#   register: passthrough_output
 
-# - name: Confirm passthrough
+# - name: Show list of unattached devices for user to select
 #   debug:
-#     msg: "Successfully passed through {{ selected_device[0] }} to VM {{ vm_id }}."
-#   when: passthrough_output is succeeded
+#     msg: |
+#       Available storage devices:
+#       {% for device in unattached_devices_name %}
+#        {{ loop.index }}: {{ unattached_devices_name[loop.index-1] }} -> {{ unattached_devices_unique_id[loop.index-1] }}
+#       {% endfor %}
+
+
+- name: Show list of unattached devices for user to select
+  debug:
+    msg: "{{ ((my_idx+1) | string) + ': ' + unattached_devices_with_sizes[my_idx] + ' -> ' + unattached_devices_unique_id[my_idx] }}"
+  loop: "{{ unattached_devices_unique_id }}"
+  loop_control:
+    index_var: my_idx
+
+- name: Ask for user input
+  pause:
+    prompt: "Please select an storage from the list from 1 to {{ unattached_devices_unique_id | length }}"
+    echo: yes
+  register: unattached_devices_unique_id_index
+
+- name: Display user input
+  debug:
+    msg: "User selected: {{ unattached_devices_unique_id_index.user_input }}"
+
+
+
+
+
+- name: Validate user selection
+  fail:
+    msg: "Invalid selection. Please enter a number between 1 and {{ unattached_devices_unique_id | length }}."
+  when: (unattached_devices_unique_id_index.user_input | int) < 1 or (unattached_devices_unique_id_index.user_input | int) > (unattached_devices_unique_id | length)
+
+- name: Get selected device
+  set_fact:
+    selected_device: "{{ unattached_devices_unique_id[unattached_devices_unique_id_index.user_input | int - 1] }}"
+
+- name: Debug selected_device
+  debug:
+    msg: "{{ selected_device }}"
+
+- name: Pass through selected device to the VM
+  command: >
+    qm set {{ vm_id }} 
+    -scsi{{ next_scsi }} /dev/disk/by-id/{{ selected_device }}
+  register: passthrough_output
+
+- name: Confirm passthrough
+  debug:
+    msg: "Successfully passed through {{ selected_device }} to VM {{ vm_id }}."
+  when: passthrough_output is succeeded
