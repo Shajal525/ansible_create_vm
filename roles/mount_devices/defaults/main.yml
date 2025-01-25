@@ -1,2 +1,5 @@
 ---
 vm_id: "{{ new_vm_id }}"
+mount_direstory: "/mnt/pendrive1"
+drive_to_mount: "/dev/sdb1"
+drive_format: "btrfs"
