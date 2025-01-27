@@ -1,0 +1,16 @@
+---
+- name: Ensure the mount point directory exists
+  file:
+    path: "{{ mount_direstory }}"
+    state: directory
+    mode: '0755'
+
+- name: "Add {{ drive_to_mount }} to {{ mount_direstory }} if not already present"
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^{{ drive_to_mount }}'
+    line: '{{ drive_to_mount }} {{ mount_direstory }} {{ drive_format }} defaults 0 0'
+    state: present
+
+- name: "Mount {{ mount_direstory }}"
+  shell: mount -a

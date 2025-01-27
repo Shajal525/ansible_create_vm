@@ -1,7 +1,7 @@
 ---
-- hosts: homeserver1
+- hosts: nasvm
   become: true
   gather_facts: false
 
   roles:
-  - mount_devices
+  - mount_device

@@ -1,4 +1,0 @@
----
-
-# - include_tasks: passthrough_storage_devices.yml
-# - include_tasks: mount_device.yml
