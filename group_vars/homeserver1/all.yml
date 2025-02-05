@@ -3,6 +3,7 @@ ssh_directory: "/home/shajal/.ssh/"
 ssh_public_key: "{{ ssh_directory }}id_rsa.pub"
 ssh_key_path: "{{ ssh_directory }}id_rsa"
 snippets_path: "/var/lib/vz/snippets/"
+
 os_image_path: "/var/lib/vz/images/0/"
 cloud_init_file: "noble-server-cloudimg-amd64.qcow2"
 image_url: "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"

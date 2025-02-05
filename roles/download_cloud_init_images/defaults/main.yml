@@ -1,0 +1,4 @@
+os_image_path: "{{ os_image_path }}"
+cloud_init_file: "{{ cloud_init_file }}"
+image_url: "{{ image_url }}"
+

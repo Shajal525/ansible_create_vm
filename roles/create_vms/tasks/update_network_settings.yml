@@ -12,7 +12,7 @@
     vmid: "{{ vm_id }}"
     name: "{{ vm_name }}"
     ipconfig:
-      ipconfig0: 'ip={{ vm_ip_address }}/24,gw={{ vm_ip_gateway }}'
+      ipconfig0: 'ip={{ new_vm_ip_address }}/24,gw={{ vm_ip_gateway }}'
     timeout: 60
     update: true
     state: "present"
