@@ -5,7 +5,7 @@ proxmox_password: "{{ proxmox_password }}"
 proxmox_node: "{{ proxmox_node }}"
 
 vm_id: "{{ new_vm_id }}"
-vm_name: "UbuntuNas"
+vm_name: "pvenetwork" #"UbuntuNas"
 vm_cores: 4
 vm_sockets: 1
 vm_memory: 4096
@@ -23,4 +23,4 @@ vm_os_type: "l26"
 snippets_storage: "local"
 vm_vga: "serial0"
 
-vm_disk_size: 90
+vm_disk_size: 20 #90
