@@ -11,4 +11,4 @@
 
 - name: Pause
   pause:
-    seconds: 60
+    seconds: 150
