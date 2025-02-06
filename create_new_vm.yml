@@ -7,3 +7,4 @@
     - download_cloud_init_images
     - create_user_files
     - create_vms
+    - post_cleanup

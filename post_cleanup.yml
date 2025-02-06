@@ -1,7 +1,0 @@
----
-- hosts: homeserver1
-  become: true
-  gather_facts: false
-
-  roles:
-  - post_cleanup
