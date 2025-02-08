@@ -1,5 +1,5 @@
 ---
-- hosts: homeserver1
+- hosts: proxmoxmain
   become: true
   gather_facts: false
 

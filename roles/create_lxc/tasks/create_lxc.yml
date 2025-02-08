@@ -1,0 +1,46 @@
+---
+
+# - name: Create a new Proxmox container (LXC)
+#   proxmox:
+#     api_host: "{{ proxmox_host }}"
+#     api_user: "{{ proxmox_user }}"
+#     api_password: "{{ proxmox_password }}"
+#     node: "{{ proxmox_node }}"
+#     vmid: "{{ lxc_id }}"
+#     hostname: "{{ lxc_hostname }}"
+#     ostemplate: "{{ ct_ostemplate }}"
+#     storage: "{{ ct_storage }}"
+#     password: "{{ ct_password }}"
+#     cores: "{{ ct_cores }}"
+#     memory: "{{ ct_memory }}"
+#     rootfs: "{{ ct_rootfs }}"
+#     netif: '{"net0":"bridge=vmbr0,ip=dhcp"}'
+#     state: present
+
+- name: Create LXC container
+  proxmox:
+    api_host: "{{ proxmox_host }}"
+    api_user: "{{ proxmox_user }}"
+    api_password: "{{ proxmox_password }}"
+    node: "{{ proxmox_node }}"
+    vmid: "{{ lxc_id }}"
+    hostname: "{{ lxc_hostname }}"
+    ostemplate: "{{ image_storage }}:vztmpl/{{ lxc_image }}"
+    storage: "{{ lxc_storage }}"
+    memory: "{{ lxc_memory }}"
+    cores: "{{ lxc_core }}"
+    netif: 
+      net0: "name=eth0,bridge=vmbr0,ip={{ lxc_ip_address }}/24,gw={{ lxc_gateway }}"
+    password: "{{ lxc_password }}"
+    pubkey: "{{ lookup('file', ssh_public_key) | trim }}"
+    state: present
+
+- name: Start the container
+  proxmox:
+    api_host: "{{ proxmox_host }}"
+    api_user: "{{ proxmox_user }}"
+    api_password: "{{ proxmox_password }}"
+    node: "{{ proxmox_node }}"
+    vmid: "{{ lxc_id }}"
+    state: started
+

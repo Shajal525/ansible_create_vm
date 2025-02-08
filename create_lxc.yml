@@ -1,0 +1,15 @@
+---
+- hosts: proxmoxmain
+  become: true
+  gather_facts: false
+
+  roles:
+    - create_lxc
+
+- hosts: pilxc
+  become: true
+  gather_facts: false
+
+  roles:
+    - after_installing_lxc
+

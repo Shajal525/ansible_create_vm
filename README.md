@@ -1,1 +1,0 @@
-# ansible_create_vm

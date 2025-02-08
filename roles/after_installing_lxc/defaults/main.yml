@@ -1,0 +1,4 @@
+shell: /bin/bash
+lcx_username: "{{ lxc_username }}"
+lxc_password: "{{ lxc_password }}"
+

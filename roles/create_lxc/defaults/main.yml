@@ -1,0 +1,11 @@
+lxc_id: 101
+lxc_hostname: "pihole.com"
+lxc_image: "debian-12-standard_12.7-1_amd64.tar.zst"
+lxc_memory: 1024
+lxc_core: 1
+lxc_ip_address: "192.168.1.5"
+lxc_gateway: "192.168.1.1"
+lxc_password: "{{ proxmox_password }}"
+image_storage: "local"
+lxc_storage: "local-zfs"
+ssh_public_key: "{{ ssh_public_key }}"
