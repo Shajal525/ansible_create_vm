@@ -5,15 +5,10 @@ proxmox_password: "{{ proxmox_password }}"
 proxmox_node: "{{ proxmox_node }}"
 
 vm_id: "{{ new_vm_id }}"
-vm_name: "pvehomelab" #"pvenetwork"
-vm_cores: 4
-vm_sockets: 1
-vm_memory: 4096
 vm_bios: "ovmf"
 vm_machine: "q35"
 vm_scsihw: "virtio-scsi-single"
 vm_bridge: "vmbr0"
-new_vm_ip_address: "192.168.1.4"
 vm_ip_gateway: "192.168.1.1"
 vm_storage: "local-zfs"
 image_storage: "local"
@@ -23,4 +18,17 @@ vm_os_type: "l26"
 snippets_storage: "local"
 vm_vga: "serial0"
 
-vm_disk_size: 90
+
+# vm_name: "pvehomelab" #"pvenetwork"
+# vm_cores: 4
+# vm_sockets: 1
+# vm_memory: 4096
+# new_vm_ip_address: "192.168.1.4"
+# vm_disk_size: 90
+
+vm_name: "pvenetwork"
+vm_cores: 1
+vm_sockets: 1
+vm_memory: 2048
+new_vm_ip_address: "192.168.1.5"
+vm_disk_size: 20

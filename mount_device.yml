@@ -1,5 +1,5 @@
 ---
-- hosts: nasvm
+- hosts: homelab
   become: true
   gather_facts: false
 

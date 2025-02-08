@@ -1,12 +1,15 @@
 snippets_path: "{{ snippets_path }}"
-new_vm_id: "{{ new_vm_id }}"
-
 proxmox_ip: "{{ proxmox_ip_address }}"
-
-new_vm_username: "{{ new_vm_username }}"
-new_vm_password: "{{ new_vm_password }}"
 ssh_public_key: "{{ ssh_public_key }}"
-api_host: "homelab" #"homenetwork"
-domain_name: ".com"
+
 timezone: 'Europe/London'
 locale: 'en_GB.UTF-8'
+domain_name: ".com"
+
+new_vm_id: "{{ new_vm_id }}"
+new_vm_username: "{{ new_vm_username }}"
+new_vm_password: "{{ new_vm_password }}"
+
+
+# api_host: "homelab"
+api_host: "homenetwork"
