@@ -1,5 +1,5 @@
 lxc_id: 101
-lxc_hostname: "pihole.com"
+lxc_hostname: "pihole"
 lxc_image: "debian-12-standard_12.7-1_amd64.tar.zst"
 lxc_memory: 1024
 lxc_core: 1
