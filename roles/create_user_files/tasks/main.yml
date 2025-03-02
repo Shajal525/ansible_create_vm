@@ -1,6 +1,7 @@
 ---
 # Create user cloud-init files
-# NOTE: The storage used for these files has to support snippets
+# NOTE: The storage used for these files has to support snippets. Eg.
+# Datacenter -> Storage -> local -> Edit -> Content -> Snippets
 - name: Create user cloud-init files
   template:
     src: user_template.j2

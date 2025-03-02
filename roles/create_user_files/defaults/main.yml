@@ -11,5 +11,5 @@ new_vm_username: "{{ new_vm_username }}"
 new_vm_password: "{{ new_vm_password }}"
 
 
-# api_host: "homelab"
-api_host: "homenetwork"
+api_host: "homelab"
+#api_host: "homenetwork"
