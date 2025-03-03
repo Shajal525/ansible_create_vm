@@ -24,6 +24,13 @@
   debug:
     msg: "The next SCSI number is {{ next_scsi }}"
 
+- name: Extract attached devices from VM config
+  set_fact:
+    attached_devices: "{{ vm_config_output.stdout | regex_findall('scsi[0-9]+: /dev/disk/by-id/([^,\\s]+)') }}"
+
+- name: Extract proxmox installation devices
+  shell: zpool status
+  register: proxmox_installation_storage
 
 - name: Get list of all devices in /dev/disk/by-id
   command: ls -l /dev/disk/by-id/
@@ -37,32 +44,41 @@
         disk_by_id_output.stdout_lines
         | reject('search', 'total')
         | reject('search', 'part')
+        | map('regex_replace', ' +', ' ')
         | map('split', ' ')
         | list
       }}
+  
+- name: Filter proxmox installation disk
+  set_fact: 
+    storage_devices_filtered: "{{ storage_devices | rejectattr('8', 'in', proxmox_installation_storage.stdout_lines | join(' ')) }}"
+
+- name: Filter already attache disks
+  set_fact: 
+    storage_devices_filtered: "{{ storage_devices_filtered | rejectattr('8', 'in', attached_devices | join(' ')) }}"
+
+- name: Filter disk id that starts with 'wwn-'
+  set_fact: 
+    storage_devices_filtered: "{{ storage_devices_filtered | rejectattr('8', 'search', '^wwn-') }}"
+
+- name: Filter disk id that starts with 'nvme-eui'
+  set_fact: 
+    storage_devices_filtered: "{{ storage_devices_filtered | rejectattr('8', 'search', '^nvme-eui') }}"
 
 - name: parse storage device unique ID
   set_fact:
-    storage_devices_unique_id: "{{ storage_devices | map(attribute='9') | list }}"
+    storage_devices_unique_id: "{{ storage_devices_filtered | map(attribute='8') | list }}"
 
 - name: parse storage device name
   set_fact:
-    storage_devices_name: "{{ storage_devices | map(attribute='11') | list | map('regex_replace', '^../../', '') | list }}"
-  
-- name: Extract attached devices from VM config
-  set_fact:
-    attached_devices: "{{ vm_config_output.stdout | regex_findall('scsi[0-9]+: /dev/disk/by-id/([^,\\s]+)') }}"
+    storage_devices_name: "{{ storage_devices_filtered | map(attribute='10') | list | map('regex_replace', '^../../', '') | list }}"
 
-- name: Filter unattached devices
-  set_fact:
-    unattached_devices_unique_id: "{{ storage_devices_unique_id | zip(storage_devices_name) | rejectattr('0', 'in', attached_devices) | map('first') | list }}"
-    unattached_devices_name: "{{ storage_devices_unique_id | zip(storage_devices_name) | rejectattr('0', 'in', attached_devices) | map('last') | list }}"
 
 - name: Get drive sizes
   shell: |
     lsblk -b -o NAME,SIZE --noheadings | awk '$1 == "{{ item }}" { printf "%s : %0.2fGB\n", $1, $2/1024/1024/1024 }'
   register: drive_sizes
-  with_items: "{{ unattached_devices_name }}"
+  with_items: "{{ storage_devices_name }}"
   changed_when: false
 
 - name: Extract drive sizes into a list
@@ -71,75 +87,60 @@
   with_items: "{{ drive_sizes.results }}"
   when: item.stdout != ""
 
+- name: Dedup entries
+  set_fact:
+    combine: "{{ unattached_devices_with_sizes | zip(storage_devices_unique_id) | sort(attribute=1, reverse=False) | unique(attribute=0) | list }}"
+    
+- name: Get Unique ID and name from dedup combined
+  set_fact:
+    unattached_devices_with_sizes: "{{ combine | map('first') | list }}"
+    storage_devices_unique_id: "{{ combine | map('last') | list }}"
 
-
-- name: Debug storage_devices unique ID
+- name: Debug storage_devices_unique_id
   debug:
     msg: "{{ storage_devices_unique_id }}"
-
-- name: Debug storage_devices_name
-  debug:
-    msg: "{{ storage_devices_name }}"
-
-- name: Debug attached_devices
-  debug:
-    msg: "{{ attached_devices }}"
-
-- name: Debug unattached_devices_unique_id
-  debug:
-    msg: "{{ unattached_devices_unique_id }}"
-
-- name: Debug unattached_devices_name
-  debug:
-    msg: "{{ unattached_devices_name }}"
 
 - name: Show unattached_devices_with_sizes
   debug:
     msg: "{{ unattached_devices_with_sizes }}"
 
 
-
-
-
-
-# - name: Show list of unattached devices for user to select
-#   debug:
-#     msg: |
-#       Available storage devices:
-#       {% for device in unattached_devices_name %}
-#        {{ loop.index }}: {{ unattached_devices_name[loop.index-1] }} -> {{ unattached_devices_unique_id[loop.index-1] }}
-#       {% endfor %}
+# # - name: Show list of unattached devices for user to select
+# #   debug:
+# #     msg: |
+# #       Available storage devices:
+# #       {% for device in storage_devices_name %}
+# #        {{ loop.index }}: {{ storage_devices_name[loop.index-1] }} -> {{ storage_devices_unique_id[loop.index-1] }}
+# #       {% endfor %}
 
 
 - name: Show list of unattached devices for user to select
   debug:
-    msg: "{{ ((my_idx+1) | string) + ': ' + unattached_devices_with_sizes[my_idx] + ' -> ' + unattached_devices_unique_id[my_idx] }}"
-  loop: "{{ unattached_devices_unique_id }}"
+    msg: "{{ ((my_idx+1) | string) + ': ' + unattached_devices_with_sizes[my_idx] + ' -> ' + storage_devices_unique_id[my_idx] }}"
+  loop: "{{ storage_devices_unique_id }}"
   loop_control:
     index_var: my_idx
 
 - name: Ask for user input
   pause:
-    prompt: "Please select an storage from the list from 1 to {{ unattached_devices_unique_id | length }}"
+    prompt: "Please select an storage from the list from 1 to {{ storage_devices_unique_id | length }}"
     echo: yes
-  register: unattached_devices_unique_id_index
+  register: storage_devices_unique_id_index
 
 - name: Display user input
   debug:
-    msg: "User selected: {{ unattached_devices_unique_id_index.user_input }}"
-
-
+    msg: "User selected: {{ storage_devices_unique_id_index.user_input }}"
 
 
 
 - name: Validate user selection
   fail:
-    msg: "Invalid selection. Please enter a number between 1 and {{ unattached_devices_unique_id | length }}."
-  when: (unattached_devices_unique_id_index.user_input | int) < 1 or (unattached_devices_unique_id_index.user_input | int) > (unattached_devices_unique_id | length)
+    msg: "Invalid selection. Please enter a number between 1 and {{ storage_devices_unique_id | length }}."
+  when: (storage_devices_unique_id_index.user_input | int) < 1 or (storage_devices_unique_id_index.user_input | int) > (storage_devices_unique_id | length)
 
 - name: Get selected device
   set_fact:
-    selected_device: "{{ unattached_devices_unique_id[unattached_devices_unique_id_index.user_input | int - 1] }}"
+    selected_device: "{{ storage_devices_unique_id[storage_devices_unique_id_index.user_input | int - 1] }}"
 
 - name: Debug selected_device
   debug:
