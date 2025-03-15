@@ -65,6 +65,18 @@
   set_fact: 
     storage_devices_filtered: "{{ storage_devices_filtered | rejectattr('8', 'search', '^nvme-eui') }}"
 
+- name: Filter disk id that starts with 'dm-'
+  set_fact: 
+    storage_devices_filtered: "{{ storage_devices_filtered | rejectattr('8', 'search', '^dm-') }}"
+
+- name: Filter disk id that starts with 'lvm-'
+  set_fact: 
+    storage_devices_filtered: "{{ storage_devices_filtered | rejectattr('8', 'search', '^lvm-') }}"
+
+- name: Filter disk id that ends with '_' followed by a number(for nvme)
+  set_fact: 
+    storage_devices_filtered: "{{ storage_devices_filtered | rejectattr('8', 'search', '_\\d$') }}"
+
 - name: parse storage device unique ID
   set_fact:
     storage_devices_unique_id: "{{ storage_devices_filtered | map(attribute='8') | list }}"
