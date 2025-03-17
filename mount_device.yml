@@ -4,4 +4,4 @@
   gather_facts: false
 
   roles:
-  - mount_device
+  # - mount_device  # Not needed
